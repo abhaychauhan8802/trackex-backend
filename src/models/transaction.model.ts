@@ -8,13 +8,31 @@ export const getTransactions = async (
   { startDate, endDate, limit }: GetTransactionBody,
   userId: number
 ) => {
-  limit = limit ?? 20;
+  let query = `
+    SELECT 
+      t.id,
+      t.amount,
+      t.payment_method,
+      t.note,
+      t.date,
+      c.name AS category_name,
+      c.type AS type,
+      t.created_at
+    FROM transactions t
+    JOIN categories c ON t.category_id = c.id
+    WHERE t.user_id = $1 
+      AND t.date::DATE BETWEEN $2 AND $3
+    ORDER BY t.date DESC
+  `;
 
-  const { rows: transactions } = await pool.query(
-    "SELECT t.id,t.amount,t.payment_method,t.note,t.date,c.name AS category_name, c.type AS type, t.created_at FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id = $1 AND t.date::DATE BETWEEN $2 AND $3 ORDER BY t.date DESC LIMIT $4",
-    [userId, startDate, endDate, limit]
-  );
+  const params: (string | number | Date)[] = [userId, startDate, endDate];
 
+  if (limit) {
+    query += ` LIMIT $4`;
+    params.push(limit);
+  }
+
+  const { rows: transactions } = await pool.query(query, params);
   if (transactions.length === 0) return [];
 
   return transactions;
