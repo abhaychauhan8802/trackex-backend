@@ -38,6 +38,15 @@ export const getTransactions = async (
   return transactions;
 };
 
+export const getTransactionByIdDB = async (postId: string, userId: number) => {
+  const { rows: transaction } = await pool.query(
+    "SELECT t.id, t.amount, t.payment_method, t.note, t.date, c.type, c.name AS category_name,c.type AS type FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.id = $1 AND t.user_id = $2",
+    [postId, userId]
+  );
+
+  return transaction[0];
+};
+
 export const getTotalIncome = async (
   { startDate, endDate }: GetTransactionBody,
   userId: number

@@ -5,6 +5,7 @@ import {
   getCategoryTotalDb,
   getTotalExpense,
   getTotalIncome,
+  getTransactionByIdDB,
   getTransactions,
 } from "../models/transaction.model";
 import {
@@ -31,6 +32,29 @@ export const getTransaction = async (
     const totalExpense = await getTotalExpense(date, userId);
 
     return { transactions, totalIncome, totalExpense };
+  } catch (error) {
+    next(errorHandle(500, "Internal server error " + error));
+    console.log(error);
+  }
+};
+
+export const getTransactionById = async (
+  postId: string,
+  userId: number,
+  next: NextFunction
+) => {
+  try {
+    if (!userId) {
+      return next(errorHandle(401, "User id is required"));
+    }
+
+    if (!postId) {
+      return next(errorHandle(400, "Time period is required"));
+    }
+
+    const transaction = await getTransactionByIdDB(postId, userId);
+
+    return transaction;
   } catch (error) {
     next(errorHandle(500, "Internal server error " + error));
     console.log(error);

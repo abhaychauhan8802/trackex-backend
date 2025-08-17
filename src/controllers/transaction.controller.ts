@@ -4,6 +4,7 @@ import {
   addTransaction,
   getCategoryTotal,
   getTransaction,
+  getTransactionById,
 } from "../services/transactions.service";
 import {
   AddTransactionBody,
@@ -30,6 +31,21 @@ export const getTransactionController = async (
     totalIncome,
     totalExpense,
   });
+};
+
+export const getTransactionByIdController = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.userId as number;
+  const postId: string = req.params.id;
+
+  const transaction = await getTransactionById(postId, userId, next);
+
+  if (!transaction) return;
+
+  res.status(200).json({ success: true, transaction });
 };
 
 export const getCategoryTotalController = async (
