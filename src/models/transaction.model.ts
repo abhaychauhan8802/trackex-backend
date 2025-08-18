@@ -40,7 +40,7 @@ export const getTransactions = async (
 
 export const getTransactionByIdDB = async (postId: string, userId: number) => {
   const { rows: transaction } = await pool.query(
-    "SELECT t.id, t.amount, t.payment_method, t.note, t.date, c.type, c.name AS category_name,c.type AS type FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.id = $1 AND t.user_id = $2",
+    "SELECT t.id, t.amount, t.payment_method, t.note, t.date, c.type, c.id AS category_id, c.name AS category_name,c.type AS type FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.id = $1 AND t.user_id = $2",
     [postId, userId]
   );
 
@@ -80,12 +80,12 @@ export const getCategoryTotalDb = async (
   userId: number
 ) => {
   const { rows: categoryIncomeTotal } = await pool.query(
-    "SELECT c.name AS category_name, SUM(t.amount) AS total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id = $1 AND c.type = 'income' AND t.date::DATE BETWEEN $2 AND $3 GROUP BY c.name",
+    "SELECT c.name AS category_name, SUM(t.amount) AS total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id = $1 AND c.type = 'income' AND t.date::DATE BETWEEN $2 AND $3 GROUP BY c.name ORDER BY total DESC",
     [userId, startDate, endDate]
   );
 
   const { rows: categoryExpenseTotal } = await pool.query(
-    "SELECT c.name AS category_name, SUM(t.amount) AS total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id = $1 AND c.type = 'expense' AND t.date::DATE BETWEEN $2 AND $3 GROUP BY c.name",
+    "SELECT c.name AS category_name, SUM(t.amount) AS total FROM transactions t JOIN categories c ON t.category_id = c.id WHERE t.user_id = $1 AND c.type = 'expense' AND t.date::DATE BETWEEN $2 AND $3 GROUP BY c.name ORDER BY total DESC",
     [userId, startDate, endDate]
   );
 
@@ -109,4 +109,27 @@ export const addNewTransaction = async (
   );
 
   return newTransaction[0];
+};
+
+export const editTransactionDB = async (
+  data: AddTransactionBody & { id: string },
+  userId: number
+) => {
+  const { id, categoryId, amount, paymentMethod, note, date } = data;
+
+  const { rows: updatedTransaction } = await pool.query(
+    "UPDATE transactions SET category_id = $1, amount = $2, payment_method = $3, date = $4, note = $5 WHERE user_id = $6 AND id = $7 RETURNING *",
+    [categoryId, amount, paymentMethod, date, note, userId, id]
+  );
+
+  return updatedTransaction[0];
+};
+
+export const deleteTransactionDB = async (id: string, userId: number) => {
+  await pool.query("DELETE FROM transactions WHERE user_id = $1 AND id = $2", [
+    userId,
+    id,
+  ]);
+
+  return true;
 };

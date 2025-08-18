@@ -2,6 +2,8 @@ import { NextFunction, Response } from "express";
 import { CustomRequest } from "../types/express";
 import {
   addTransaction,
+  deleteTransaction,
+  editTransaction,
   getCategoryTotal,
   getTransaction,
   getTransactionById,
@@ -78,4 +80,42 @@ export const addTransactionController = async (
   res
     .status(201)
     .json({ success: true, message: "Transaction added", newTransaction });
+};
+
+export const editTransactionController = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.userId as number;
+  const body: AddTransactionBody & { id: string } = req.body;
+
+  const updatedTransaction = await editTransaction(body, userId, next);
+
+  if (!updatedTransaction) return;
+
+  res.status(201).json({
+    success: true,
+    message: "Transaction updated",
+    updatedTransaction,
+  });
+};
+
+export const deleteTransactionController = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.userId as number;
+  const id = req.params.id;
+
+  const deleteTransactions = await deleteTransaction(id, userId, next);
+
+  if (!deleteTransactions) return;
+
+  res.status(201).json({
+    success: true,
+    message: "Transaction deleted successfully",
+    deleteTransactions,
+  });
 };

@@ -2,6 +2,8 @@ import { NextFunction } from "express";
 import { errorHandle } from "../utils/errorHandle";
 import {
   addNewTransaction,
+  deleteTransactionDB,
+  editTransactionDB,
   getCategoryTotalDb,
   getTotalExpense,
   getTotalIncome,
@@ -101,6 +103,52 @@ export const addTransaction = async (
     const newTransaction = await addNewTransaction(data, userId);
 
     return newTransaction;
+  } catch (error) {
+    next(errorHandle(500, "Internal server error " + error));
+    console.log(error);
+  }
+};
+
+export const editTransaction = async (
+  data: AddTransactionBody & { id: string },
+  userId: number,
+  next: NextFunction
+) => {
+  try {
+    if (!userId) {
+      return next(errorHandle(401, "User id is required"));
+    }
+
+    if (!data) {
+      return next(errorHandle(400, "Transaction data is required"));
+    }
+
+    const editTransaction = await editTransactionDB(data, userId);
+
+    return editTransaction;
+  } catch (error) {
+    next(errorHandle(500, "Internal server error " + error));
+    console.log(error);
+  }
+};
+
+export const deleteTransaction = async (
+  id: string,
+  userId: number,
+  next: NextFunction
+) => {
+  try {
+    if (!userId) {
+      return next(errorHandle(401, "User id is required"));
+    }
+
+    if (!id) {
+      return next(errorHandle(400, "Transaction id is required"));
+    }
+
+    const deleteTransaction = await deleteTransactionDB(id, userId);
+
+    return deleteTransaction;
   } catch (error) {
     next(errorHandle(500, "Internal server error " + error));
     console.log(error);
